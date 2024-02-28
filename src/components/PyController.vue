@@ -83,7 +83,7 @@ export default {
       excelAddress: 'D：//示例文本.xlsx',
       imageAddress: 'D://',
       catUrl: 'www.baidu.com',
-      page: 10,
+      page: 0,
       description: '',
       folderPath: '', // 存放所选文件夹的路径
       drawer: false,
