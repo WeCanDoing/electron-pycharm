@@ -10,6 +10,7 @@ module.exports = defineConfig({
         asar: false,
         appId: "com.example.app",
         win: {
+          icon: "build/icon.ico",
           target: ["nsis", "zip"]
         },
         directories: {
