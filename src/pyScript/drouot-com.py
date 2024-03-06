@@ -15,7 +15,6 @@ imgDownLoad = argv[3]
 i = int(argv[4])
 #是否只导出文本 0否 1是
 onlyWrite =int(argv[5])
-page = 0 
 
 # 编号
 lotNumber = []
@@ -41,7 +40,7 @@ folder = imgDownLoad
 if not os.path.exists(folder):
     os.mkdir(folder)
 
-page = 1
+page = 10
 sort = 0
 
 #拼接url地址    
@@ -104,9 +103,6 @@ for i in range(i, page, 1):
             priceContext = context.find(class_="lineBpadding2")
             if priceContext is None:
                 price = context.find(class_="font-dark-d floatRight").get_text()
-                # pattern = r"\d+"
-                # result = re.findall(pattern, price)
-                # num = result[0] + "" + result[1]
                 if price == 'Aucune estimation':
                     startPriceList.append(price)
                 else:
@@ -163,6 +159,8 @@ for i in range(i, page, 1):
 
                     new_url = result.group(1).replace("small", "fullHD")
 
+
+                    # 避免频繁抓紧被限制
                     time.sleep(1)
                     # 写入图片
 
@@ -179,7 +177,8 @@ for i in range(i, page, 1):
                                 # 将图片数据写入文件
                                 f.write(data)
                                 # 打印提示信息
-                                print(f'已保存{new_url}到{path}')
+                                print(f'请求成功，状态码为{response.status_code}')
+
                         else:
                             # 如果状态码不是200，打印错误信息
                             print(f'请求失败，状态码为{response.status_code}')
