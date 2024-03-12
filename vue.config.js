@@ -29,6 +29,17 @@ module.exports = defineConfig({
       }
     }
   },
+  devServer: {  
+    proxy: {  
+      '/api': {  
+        target: 'https://erp-bvt.yjwh.shop/', // 替换为你的目标服务器地址  
+        changeOrigin: true, // 如果你的目标服务器的协议或主机与你的开发服务器不同，需要设置为 true  
+        pathRewrite: {  
+          '^/api': '' // 移除请求路径中的 '/api' 前缀  
+        }  
+      }  
+    }  
+  },
    // 其他配置...
    configureWebpack: {
     // 将 plugins 字段移动到这里

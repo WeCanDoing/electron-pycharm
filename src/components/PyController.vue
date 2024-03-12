@@ -31,34 +31,17 @@
         </div>
         <div style="display: flex; align-items: center;">
           <!-- 使用 flex-grow 属性来分配剩余空间 -->
-          <span style="width: 150px;">网页地址</span>
-          <el-input placeholder="请输入内容" v-model="catUrl" clearable style="width: 150px;"></el-input>
-          <span style="width: 150px; margin-left: 10px;">页数</span>
-          <el-input placeholder="请输入内容" v-model="page" clearable style="width: 150px;"></el-input>
-          <el-radio v-model="radio" label=0>导出文本和图片</el-radio>
+          <span style="width: 150px;">拍卖会ID</span>
+          <el-input placeholder="请输入内容" v-model="catUrl" clearable style="width: 250px;"></el-input>
+          <el-radio style="margin-left: 200px;" v-model="radio" label=0>导出文本和图片</el-radio>
           <el-radio v-model="radio" label=1>仅导出文本</el-radio>
+          <span> 参数{{ message }}</span>
+          <span> 参数{{ token }}</span>
+
         </div>
       </el-card>
     </div>
     <div>
-      <div>
-        脚本名称：{{ message }}
-        <el-popconfirm @confirm="clickRun" title="确认执行脚本？">
-          <el-button type="success" slot="reference" :loading = "runDisabled">执行</el-button>
-        </el-popconfirm>
-        <el-button @click="illustrateShow" type="primary" style="margin-left: 16px;">
-          文件使用说明
-        </el-button>
-        <el-drawer
-        title="文件使用说明"
-        :visible.sync="drawer"
-        :direction="direction"
-        :before-close="handleClose">
-        <span v-html="inputDesc"></span>
-        <span v-html="illustrate"></span>
-      </el-drawer>
-      </div>
-    <el-divider></el-divider>
     <div class="my-class">
       <el-input style="color: #333;" type="textarea" :autosize="{ minRows: 20 }" placeholder="请输入内容" v-model="description"
         clearable>
@@ -76,7 +59,8 @@ const { spawn } = window.require('child_process');
 
 export default {
   props: {
-    message: String // 修改了这里
+    message: Number,
+    token: String // 修改了这里
   },
   data() {
     return {
