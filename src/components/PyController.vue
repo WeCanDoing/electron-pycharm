@@ -16,10 +16,6 @@
             ref="fileSelector">
 
         </div>
-
-
-        <span style="width: 150px; margin-left: 10px;">Excel下载地址</span>
-        <el-input placeholder="请输入内容" v-model="excelAddress" clearable style="width: 250px;"></el-input>
       </div>
     </el-card>
 
@@ -31,10 +27,7 @@
         </div>
         <div style="display: flex; align-items: center;">
           <!-- 使用 flex-grow 属性来分配剩余空间 -->
-          <span style="width: 150px;">拍卖会ID</span>
-          <el-input placeholder="请输入内容" v-model="catUrl" clearable style="width: 250px;"></el-input>
-          <el-radio style="margin-left: 200px;" v-model="radio" label=0>导出文本和图片</el-radio>
-          <el-radio v-model="radio" label=1>仅导出文本</el-radio>
+          <el-radio style="margin-left: 200px;" v-model="radio" label=0>导入图片</el-radio>
           <span> 参数{{ message }}</span>
           <span> 参数{{ token }}</span>
 
@@ -53,8 +46,6 @@
 <script>
 // const exec =  window.require('child_process').exec
 const path = window.require('path');
-var iconv = require('iconv-lite');
-const { spawn } = window.require('child_process');
 
 
 export default {
@@ -66,7 +57,6 @@ export default {
     return {
       excelAddress: 'D：//示例文本.xlsx',
       imageAddress: 'D://',
-      catUrl: 'www.baidu.com',
       page: 0,
       description: '',
       folderPath: '', // 存放所选文件夹的路径
@@ -100,52 +90,6 @@ export default {
       console.log(this.runDisabled)
       //清除之前的控制台缓存
       t.description = ''
-      this.cmdCopy(this.excelAddress, this.imageAddress, this.catUrl, this.page,this.radio, function (e) {
-        // t.description = e // 这里直接赋值可能不会更新视图
-        t.description = t.description + iconv.decode(e, 'GBK')
-        console.log("打印--", t.description)
-
-      })
-    },
-
-    //运行python脚本
-    cmdCopy(excelAddress, imageAddress, catUrl, page,radio, callbackFun) {
-      //开关控制
-      try {
-        console.log(path.resolve(this.message))
-        // 任何你期望执行的 cmd 命令，ipconfig 为例
-        // const cmd = 'ping www.baidu.com ';
-        const cmd = `python -u ${path.resolve(this.message)} ${catUrl} ${excelAddress} ${imageAddress} ${page} ${radio}`
-        // const cmd = 'python -u E://测试/testPy.py ';
-        console.log("cmd" + cmd)
-        //运行python命令
-
-        // 创建一个子进程，设置 shell 和 encoding 选项
-        const child = spawn(cmd, { shell: true, encoding: 'buffer' });
-        // 监听子进程的标准输出流
-        child.stdout.on('data', (data) => {
-          // 使用 iconv-lite 解码 Buffer 对象
-          console.log(iconv.decode(data, 'GBK'));
-          // 使用 callbackFun 函数或其他方式处理输出结果
-          callbackFun(data);
-        });
-
-        // 监听子进程的标准错误流
-        child.stderr.on('data', (data) => {
-          // 使用 iconv-lite 解码 Buffer 对象
-          console.error(iconv.decode(data, 'GBK'));
-          // 使用 callbackFun 函数或其他方式处理输出结果
-          callbackFun(data);
-        });
-
-        //监听关闭流
-        child.on('close', (data) => {
-          console.log(iconv.decode(data, 'GBK'));
-          this.runDisabled = false 
-        });
-      } catch (e) {
-        console.log(e)
-      }
     },
 
     //python文件参数说明

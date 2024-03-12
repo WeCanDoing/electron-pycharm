@@ -1,57 +1,70 @@
 <template>
-    <div>
-      <el-main>
-      <el-table :data="fileList"  @row-click="sendEvent">
+  <div>
+    <el-main>
+      <el-table :data="fileList" @row-click="sendEvent">
         <el-table-column prop="name" label="文件名称" width="140">
-        </el-table-column>
-        <!-- <el-table-column prop="size" label="大小" width="120">
-        </el-table-column> -->
-        <el-table-column prop="isDirectory" label="地址" width="180">
         </el-table-column>
       </el-table>
     </el-main>
-    </div>
-  </template>
-  
-  <script>
-  const fs = window.require('fs');
-  
-  export default {
-    data() {
-      return {
-        fileList: [],
-        info: "测试"
-      };
-    },
-    mounted() {
-      // const dir = './src/pyScript'; // 替换为您的目录路径
-      const dir ='./resources/pyScript';
-      this.fileList = this.getFiles(dir);
-    },
-    methods: {
-      getFiles(dir) {
-        const files = fs.readdirSync(dir);
-        return files.map((file) => {
-          const filePath = `${dir}/${file}`;
-          const stats = fs.statSync(filePath);
-          return {
-            name: file,
-            size: stats.size,
-            isDirectory: filePath,
-          };
-        });
-      },
-      sendEvent(row, column, cell, event) {
-        // 使用 $emit 方法触发一个名为 my-event 的自定义事件，并将 info 作为参数传递
-        console.log("row", row)
-        console.log(column)
-        console.log(cell)
-        console.log(event)
+  </div>
+</template>
 
-        this.$emit('my-event', row.isDirectory)
-      }
-      
-    }
-  };
-  </script>
+<script>
+const path = require('path');
+const fs = window.require('fs');
+export default {
+
+  props: {
+    disr: String
+  },
+  data() {
+    return {
+      fileList: [{
+            name: '王小虎'
+          }],
+      info: "测试"
+    };
+  },
+  mounted() {
+      console.log("监听方法")
+      this.getFiles(this.disr);
+  },
+
+  methods: {
+    getFiles(disr) {  
+    this.getDirectories(disr);  
+    console.log("值"+ this.fileList)
+  },  
   
+  getDirectories(srcpath) {  
+    console.log(srcpath)
+    const files = fs.readdirSync(srcpath);  
+    console.log(files)
+    this.fileList = [];
+    files.forEach(file => {
+      if(fs.lstatSync(path.join(srcpath, file)).isDirectory()){
+        console.log(String(file))
+        this.fileList.push({ name: String(file) }); // 将目录名作为对象添加到fileList中  
+      }else{
+        console.log("不是目录")
+      }
+    });
+  },  
+  
+  sendEvent(row, column, cell, event) {  
+    // 假设你希望发送目录名称，那么应该发送 row.name  
+    this.$emit('my-event', row.name);  
+    console.log(column)
+    console.log(cell)
+    console.log(event)
+
+  }  
+  },
+  watch: {
+    disr() {
+      console.log("监听方法")
+      this.getFiles(this.disr);
+    }
+  },
+};
+</script>
