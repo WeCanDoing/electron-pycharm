@@ -81,12 +81,12 @@ export default {
         // 登录方法
         login() {
             {
-                axios.defaults.baseURL = 'http://192.168.1.240:8063';
+                axios.defaults.baseURL = 'https://erp-bvt.yjwh.shop';
                 const postData = {
                     userName: this.userName,
                     password: encrypt(this.passworld)
                 };
-                axios.post('/auth/login', postData).then(response => {
+                axios.post('/admin/auth/login', postData).then(response => {
                     if (response.status === 200) {
                         console.log(response.status);
                         this.token = response.data.token;
