@@ -12,7 +12,7 @@
           <el-radio style="margin-left: 200px;" v-model="radio" label=0>导入图片</el-radio>
           <span> 参数{{ isLogin }}</span>
           <!-- <span> 参数{{ token }}</span> -->
-          <span> 参数{{ index }}</span>
+          <span> 参数{{ indexflag }}</span>
 
         </div>
       </el-card>
@@ -22,9 +22,7 @@
         <el-popconfirm @confirm="clickRun" title="确认上传图片？">
           <el-button type="success" slot="reference" :loading="runDisabled">上传图片</el-button>
         </el-popconfirm>
-      </div>
-      <div>
-        <el-popconfirm v-if="index == 0" @confirm="clickUpload" title="确认上传erp图片？原图片会被覆盖">
+        <el-popconfirm v-if="indexflag == 0" @confirm="clickUpload" title="确认上传erp图片？原图片会被覆盖" style="padding-left:20px ;">
           <el-button type="success" slot="reference" :loading="runDisabled">上传ERP图片</el-button>
         </el-popconfirm>
       </div>
@@ -67,7 +65,7 @@ export default {
       runDisabled: false,
       fileList: [],
       uploadResult: [],
-      index: 0
+      indexflag: 0
     };
   },
   mounted() { },
@@ -110,7 +108,7 @@ export default {
           } else {
             const extname = path.extname(file).toLowerCase();
             if (extname === '.jpg' || extname === '.png' || extname === '.jpeg') {
-              this.index++
+              this.indexflag++
               if (!result[path.basename(this.disr)]) {
                 result[path.basename(this.disr)] = [];
               }
@@ -120,16 +118,19 @@ export default {
             }
           }
         })
-        console.log("文件解析结果" + result)
-        for (const [dirName, itemArray] of Object.entries(result)) {
-          if (!this.uploadResult[dirName]) {
-            this.uploadResult[dirName] = [];
+        // 处理每个子组（每组5个）
+          for (const [dirName, itemArray] of Object.entries(result)) {
+            if (!this.uploadResult[dirName]) {
+              this.uploadResult[dirName] = new Array(itemArray.length);
+            }
+            //批处理大小（batchSize）
+            const batchSize = 5;
+            for (let i = 0; i < itemArray.length; i += batchSize) {
+              const batch = itemArray.slice(i, i + batchSize);
+              await Promise.all(batch.map((item, index) => this.imagePathToBlob(item, dirName, index)));
+            }
           }
-          // 使用Promise.all等待所有图片处理完成
-          await Promise.all(itemArray.map(item => this.imagePathToBlob(item, dirName)))
-        }
         console.log("全部执行完毕")
-        //上传完成调用接口
       } else {
         this.$notify.error({
           title: '错误',
@@ -141,16 +142,15 @@ export default {
 
 
     // 本地图片转换为blob
-    async imagePathToBlob(imagePath, dirName) {
+    async imagePathToBlob(imagePath, dirName, index) {
       const data = await fs.promises.readFile(imagePath);
       const arrayBuffer = new Uint8Array(data).buffer;
       const blob = new Blob([arrayBuffer], { type: 'image/png' });
-      await this.post(dirName, blob);
-
+      await this.post(dirName, blob, index);
     },
 
     // 图片上传到阿里云
-    async post(dirName, rawFile) {
+    async post(dirName, rawFile, index) {
       const options = {
         headers: {},
         withCredentials: false,
@@ -173,14 +173,14 @@ export default {
           };
           let newObj = { ...obj, ...res.msg };
           this.description = this.description + "图片上传成功" + newObj.path + "/n"
-          this.uploadResult[dirName].push(newObj.path);
-          this.index--
+          this.uploadResult[dirName][index] = newObj.path; // 使用索引插入网络地址
+          this.indexflag--
           console.log(this.uploadResult)
         },
         onError: async (err) => {
           console.log(err)
           this.description = this.description + "图片上传失败" + err
-          this.index--
+          this.indexflag--
 
         },
       };
@@ -207,7 +207,7 @@ export default {
           // 如果是文件，检查当前目录是否已在结果对象中  
           const extname = path.extname(file).toLowerCase();
           if (extname === '.jpg' || extname === '.png' || extname === '.jpeg') {
-            this.index++
+            this.indexflag++
             if (!result[path.basename(dir)]) {
               result[path.basename(dir)] = [];
             }
@@ -242,7 +242,7 @@ export default {
       if (this.isLogin == 1) {
 
         try {
-          const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config);
+          const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config)
           if (response.status === 200 || response.status === 201) {
             this.description = this.description + dirName + "图片上传成功"
             console.log(response.status);

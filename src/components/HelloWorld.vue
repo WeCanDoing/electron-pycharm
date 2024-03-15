@@ -6,7 +6,7 @@
                 <div style="width: 380px;">
                     <file-list v-on:my-event="handleEvent" :disr="disr"></file-list>
                     <button @click="selectDirectory">选择文件夹</button>  
-                     <p>选择的文件夹路径: {{ folderPath }}</p>  
+                     <p>选择的文件夹路径: {{ disr }}</p>  
                     <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles"
                         ref="fileSelector">
                 </div>
@@ -57,7 +57,7 @@ export default {
             userName: "admin",
             passworld: "123456",
             token: "admin",
-            disr: 'C://Users/Administrator/Pictures/测试',
+            disr: 'C://Users/Administrator/Pictures',
             folderPath:'',
         }
 
@@ -70,8 +70,8 @@ export default {
         handleFiles(event) {
             const filePath = event.target.files[0].path;
             this.folderPath = path.dirname(filePath);
-            this.disr = this.folderPath
-            console.log(this.folderPath)
+            this.disr = path.dirname(this.folderPath);
+            console.log("文件夹路径"+this.disr)
         },
         handleEvent(data) {
             // data 是子组件传递过来的参数，获取路径
