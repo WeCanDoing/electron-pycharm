@@ -242,7 +242,8 @@ export default {
       if (this.isLogin == 1) {
 
         try {
-          const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config)
+          axios.defaults.baseURL = 'http://192.168.1.240:8063';
+          const response = await axios.post('/api/goods/preSell/photoUploadByTool', postData, config)
           if (response.status === 200 || response.status === 201) {
             this.description = this.description + dirName + "图片上传成功"
             console.log(response.status);

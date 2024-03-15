@@ -70,7 +70,7 @@ export default {
         handleFiles(event) {
             const filePath = event.target.files[0].path;
             this.folderPath = path.dirname(filePath);
-            this.disr = path.dirname(this.folderPath);
+            this.disr = this.folderPath;
             console.log("文件夹路径"+this.disr)
         },
         handleEvent(data) {
@@ -81,11 +81,12 @@ export default {
         // 登录方法
         login() {
             {
+                axios.defaults.baseURL = 'http://192.168.1.240:8063';
                 const postData = {
                     userName: this.userName,
                     password: encrypt(this.passworld)
                 };
-                axios.post('/admin/auth/login', postData).then(response => {
+                axios.post('/auth/login', postData).then(response => {
                     if (response.status === 200) {
                         console.log(response.status);
                         this.token = response.data.token;

@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, dialog,session } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -23,7 +23,8 @@ async function createWindow() {
       // nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       nodeIntegration: true,
       // contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
-      contextIsolation: false
+      contextIsolation: false,
+      webSecurity: false
     }
   })
 

@@ -30,6 +30,7 @@ module.exports = defineConfig({
     }
   },
   devServer: {  
+    //打包后不生效，需要配置在background.js中
     proxy: {  
       '/admin': {  
         target: 'http://192.168.1.240:8063/', // 替换为你的目标服务器地址  
