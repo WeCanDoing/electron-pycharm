@@ -51,13 +51,9 @@ export default {
     });
   },  
   
-  sendEvent(row, column, cell, event) {  
+  sendEvent() {  
     // 假设你希望发送目录名称，那么应该发送 row.name  
-    this.$emit('my-event', row.name);  
-    console.log(column)
-    console.log(cell)
-    console.log(event)
-
+    // this.$emit('my-event', this.fileList);  
   }  
   },
   watch: {

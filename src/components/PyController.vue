@@ -1,24 +1,6 @@
 <template>
   <div>
     <!-- 使用 flex 布局的容器 -->
-    <el-card class="box-card">
-      <div slot="header" class="clearfix">
-        <span>通用设置</span>
-      </div>
-      <div style="display: flex; align-items: center;">
-        <!-- 使用 flex-grow 属性来分配剩余空间 -->
-        <span style="width: 150px;">图片文件夹下载地址</span>
-
-        <el-input placeholder="请输入内容" v-model="imageAddress" clearable style="width: 250px;"></el-input>
-        <div>
-          <el-button type="primary" @click="selectDirectory">选择文件夹</el-button>
-          <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles"
-            ref="fileSelector">
-
-        </div>
-      </div>
-    </el-card>
-
     <div>
       <!-- 使用 flex 布局的容器 -->
       <el-card class="box-card">
@@ -28,30 +10,48 @@
         <div style="display: flex; align-items: center;">
           <!-- 使用 flex-grow 属性来分配剩余空间 -->
           <el-radio style="margin-left: 200px;" v-model="radio" label=0>导入图片</el-radio>
-          <span> 参数{{ message }}</span>
-          <span> 参数{{ token }}</span>
+          <span> 参数{{ isLogin }}</span>
+          <!-- <span> 参数{{ token }}</span> -->
+          <span> 参数{{ index }}</span>
 
         </div>
       </el-card>
     </div>
     <div>
-    <div class="my-class">
-      <el-input style="color: #333;" type="textarea" :autosize="{ minRows: 20 }" placeholder="请输入内容" v-model="description"
-        clearable>
-      </el-input>
+      <div>
+        <el-popconfirm @confirm="clickRun" title="确认上传图片？">
+          <el-button type="success" slot="reference" :loading="runDisabled">上传图片</el-button>
+        </el-popconfirm>
+      </div>
+      <div>
+        <el-popconfirm v-if="index == 0" @confirm="clickUpload" title="确认上传erp图片？原图片会被覆盖">
+          <el-button type="success" slot="reference" :loading="runDisabled">上传ERP图片</el-button>
+        </el-popconfirm>
+      </div>
+      <el-divider></el-divider>
+      <div class="my-class">
+        <el-input style="color: #333;" type="textarea" :autosize="{ minRows: 20 }" placeholder="请输入内容"
+          v-model="description" clearable>
+        </el-input>
+      </div>
     </div>
   </div>
-</div></template>
+</template>
 
 <script>
 // const exec =  window.require('child_process').exec
 const path = window.require('path');
+const fs = window.require('fs');
+import ajax from "@/assets/js/ajax";
+import ConcurrencyLimiter from '@/assets/js/concurrencyLimiter';
+import axios from 'axios';
 
 
 export default {
   props: {
-    message: Number,
-    token: String // 修改了这里
+    isLogin: Number,
+    token: String,// 修改了这里
+    disr: String
   },
   data() {
     return {
@@ -65,6 +65,9 @@ export default {
       inputDesc: '参数说明',
       radio: '0',
       runDisabled: false,
+      fileList: [],
+      uploadResult: [],
+      index: 0
     };
   },
   mounted() { },
@@ -83,29 +86,211 @@ export default {
     },
 
     //点击事件
-    clickRun() {
-      let t = this
-      //控制按钮为加载的样式，无法点击
-      this.runDisabled = true
-      console.log(this.runDisabled)
-      //清除之前的控制台缓存
-      t.description = ''
+    async clickRun() {
+      if (this.isLogin == 1) {
+        //原始数据清除
+        this.uploadResult = []
+        //控制按钮为加载的样式，无法点击
+        this.runDisabled = true
+        this.description = ''
+        //操作文件夹，将文件夹中的文件进行分类，并转为数据结构
+        const files = fs.readdirSync(this.disr);
+        const result = {} // 使用对象来存储目录和文件列表  
+
+        files.forEach((file) => {
+          const fullPath = path.join(this.disr, file);
+          const stat = fs.statSync(fullPath);
+          if (stat.isDirectory()) {
+            // 如果是目录，递归调用并存储结果  
+            const dirFiles = this.getFilesInDir(fullPath);
+            if (!result[dirFiles.fileName]) {
+              result[dirFiles.fileName] = [];
+            }
+            result[dirFiles.fileName].push(...dirFiles.fileList);
+          } else {
+            const extname = path.extname(file).toLowerCase();
+            if (extname === '.jpg' || extname === '.png' || extname === '.jpeg') {
+              this.index++
+              if (!result[path.basename(this.disr)]) {
+                result[path.basename(this.disr)] = [];
+              }
+
+              result[path.basename(this.disr)].push(fullPath);
+              console.log("文件开始传输")
+            }
+          }
+        })
+        console.log("文件解析结果" + result)
+        for (const [dirName, itemArray] of Object.entries(result)) {
+          if (!this.uploadResult[dirName]) {
+            this.uploadResult[dirName] = [];
+          }
+          // 使用Promise.all等待所有图片处理完成
+          await Promise.all(itemArray.map(item => this.imagePathToBlob(item, dirName)))
+        }
+        console.log("全部执行完毕")
+        //上传完成调用接口
+      } else {
+        this.$notify.error({
+          title: '错误',
+          message: '未登录无法执行脚本，请登录后再试'
+        });
+      }
+      this.runDisabled = false
     },
 
-    //python文件参数说明
-    illustrateShow() {
-      this.drawer = true
-      this.inputDesc = "图片文件夹下载地址：图片保存的路径 <br> Excel下载地址:拍品文本的下载地址，需要具体到文件名称 如D：//示例文本.xlsx <br> 网页地址: 需要抓取的网址 <br> "
-      if (this.message.includes("drouot")) {
-        this.illustrate = `本脚本抓取的是www.drouot.com网址专用的脚本 抓取的网址获取方式为：<br>
-        1.打开要抓取的网页（必须是drouot网站）<br>
-        2.负责上方网页链接填入抓取地址 <br>
-        3.在起始页码处填写0  <br>
-        4.执行脚本 <br>
-        `
+
+    // 本地图片转换为blob
+    async imagePathToBlob(imagePath, dirName) {
+      const data = await fs.promises.readFile(imagePath);
+      const arrayBuffer = new Uint8Array(data).buffer;
+      const blob = new Blob([arrayBuffer], { type: 'image/png' });
+      await this.post(dirName, blob);
+
+    },
+
+    // 图片上传到阿里云
+    async post(dirName, rawFile) {
+      const options = {
+        headers: {},
+        withCredentials: false,
+        file: rawFile,
+        data: {},
+        filename: "file",
+        action: "https://ivr.yjwh.shop/aliyun/oss/upload/",
+        onProgress: (e) => {
+          // this.onProgress(e, rawFile);
+          console.log(e)
+        },
+        onSuccess: async (res) => {
+          let obj = {
+            name: rawFile.name,
+            webkitRelativePath: rawFile.webkitRelativePath,
+            size: rawFile.size,
+            type: rawFile.type,
+            serialNumber: rawFile.serialNumber,
+            file_name: rawFile.file_name,
+          };
+          let newObj = { ...obj, ...res.msg };
+          this.description = this.description + "图片上传成功" + newObj.path + "/n"
+          this.uploadResult[dirName].push(newObj.path);
+          this.index--
+          console.log(this.uploadResult)
+        },
+        onError: async (err) => {
+          console.log(err)
+          this.description = this.description + "图片上传失败" + err
+          this.index--
+
+        },
+      };
+      const req = ajax(options);
+      if (req && req.then) {
+        req.then(options.onSuccess, options.onError);
       }
+    },
+
+
+    getFilesInDir(dir) {
+      const files = fs.readdirSync(dir);
+      const result = {}; // 使用对象来存储目录和文件列表  
+
+      files.forEach((file) => {
+        const fullPath = path.join(dir, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isDirectory()) {
+          // 如果是目录，递归调用并存储结果  
+          const dirFiles = this.getFilesInDir(fullPath);
+          // 使用目录名作为键，文件列表作为值  
+          result[file] = dirFiles.fileList || [];
+        } else {
+          // 如果是文件，检查当前目录是否已在结果对象中  
+          const extname = path.extname(file).toLowerCase();
+          if (extname === '.jpg' || extname === '.png' || extname === '.jpeg') {
+            this.index++
+            if (!result[path.basename(dir)]) {
+              result[path.basename(dir)] = [];
+            }
+            // 将文件添加到当前目录的文件列表中  
+            result[path.basename(dir)].push(fullPath);
+          }
+        }
+      });
+
+      // 返回包含目录和文件列表的对象  
+      return { fileName: path.basename(dir), fileList: Object.values(result).flat() };
+    },
+
+
+    async uploadData(dirName, itemArray) {
+      // 这里是上传数据的逻辑，返回一个Promise
+      console.log(dirName);
+      console.log(itemArray);
+
+      // 假设使用了axios进行请求
+      const postData = {
+        goodsNo: dirName,
+        imgList: itemArray
+      };
+
+      // 设置请求头部，包含token
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${this.token}`
+        }
+      };
+      if (this.isLogin == 1) {
+
+        try {
+          const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config);
+          if (response.status === 200 || response.status === 201) {
+            this.description = this.description + dirName + "图片上传成功"
+            console.log(response.status);
+          } else if (response.status === 400) {
+            console.log("请求失败");
+            this.description = this.description + dirName + "图片覆盖失败" + response.data.message
+          } else {
+            this.description = this.description + dirName + "发生未知错误，图片覆盖失败，请联系管理员"
+          }
+          return response.data;
+        } catch (error) {
+          console.error("上传数据时发生错误:", error);
+          // 处理错误情况
+          this.description = this.description + "发生未知错误，图片覆盖失败，请联系管理员"
+
+        }
+      } else {
+        this.$notify.error({
+          title: '错误',
+          message: '未登录无法执行脚本，请登录后再试'
+        });
+      }
+    },
+    //上传erp接口
+    clickUpload() {
+      const limiter = new ConcurrencyLimiter(4); // 创建并发限制为4的limiter  
+      this.processTasks(this.uploadResult, limiter)
+    },
+
+    processTasks(tasks, limiter) {
+      console.log(ConcurrencyLimiter)
+      for (const [dirName, itemArray] of Object.entries(tasks)) {
+        // 为每个任务创建一个Promise，并通过limiter的 add 方法加入队列  
+        limiter.add(() => this.uploadData(dirName, itemArray)).then(result => {
+          console.log(`Task ${dirName} uploaded with result:`, result);
+        }).catch(error => {
+          console.error(`Failed to upload task ${dirName}`, error);
+        });
+      }
+
+    },
+  },
+  watch: {
+    disr() {
+      console.log("监听方法--执行器" + this.disr)
+
     }
-  } 
+  },
 }
 
 
@@ -142,4 +327,4 @@ export default {
   border-radius: 4px;
   color: #333;
 }
-</style>
+</style>ajax(options)options.onSuccess

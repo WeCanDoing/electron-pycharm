@@ -26,7 +26,7 @@
                     </div>
                 </el-header>
                 <el-main>
-                    <py-controller :message="isLogin" :token ="token"></py-controller>
+                    <py-controller :isLogin="isLogin"  :disr="disr" :token ="token" ></py-controller>
                 </el-main>
             </el-container>
         </el-container>
@@ -58,7 +58,7 @@ export default {
             passworld: "123456",
             token: "admin",
             disr: 'C://Users/Administrator/Pictures/测试',
-            folderPath:''
+            folderPath:'',
         }
 
   },
@@ -76,7 +76,6 @@ export default {
         handleEvent(data) {
             // data 是子组件传递过来的参数，获取路径
             console.log("地址", data)
-            this.disr = data
         },
 
         // 登录方法
@@ -86,7 +85,7 @@ export default {
                     userName: this.userName,
                     password: encrypt(this.passworld)
                 };
-                axios.post('/api/admin/auth/login', postData).then(response => {
+                axios.post('/admin/auth/login', postData).then(response => {
                     if (response.status === 200) {
                         console.log(response.status);
                         this.token = response.data.token;
