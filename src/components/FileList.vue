@@ -20,7 +20,7 @@ export default {
   data() {
     return {
       fileList: [{
-            name: '王小虎'
+            name: '请先选择图片文件夹'
           }],
       info: "测试"
     };

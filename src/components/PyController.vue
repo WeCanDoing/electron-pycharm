@@ -20,16 +20,17 @@
     <div>
       <div>
         <el-popconfirm @confirm="clickRun" title="确认上传图片？">
-          <el-button type="success" slot="reference" :loading="runDisabled">上传图片</el-button>
+          <el-button type="success" slot="reference" :loading="runDisabled">第二步：上传图片</el-button>
         </el-popconfirm>
-        <el-popconfirm v-if="indexflag == 0" @confirm="clickUpload" title="确认上传erp图片？原图片会被覆盖" style="padding-left:20px ;">
-          <el-button type="success" slot="reference" :loading="runDisabled">上传ERP图片</el-button>
+        <el-popconfirm v-if="indexflag == 0" @confirm="clickUpload" title="确认上传erp图片？原图片会被覆盖"
+          style="padding-left:20px ;">
+          <el-button type="success" slot="reference" :loading="runDisabled">第三步：上传ERP图片</el-button>
         </el-popconfirm>
       </div>
       <el-divider></el-divider>
       <div class="my-class">
         <el-input style="color: #333;" type="textarea" :autosize="{ minRows: 20 }" placeholder="请输入内容"
-          v-model="description" clearable>
+          v-html="description" clearable>
         </el-input>
       </div>
     </div>
@@ -119,17 +120,17 @@ export default {
           }
         })
         // 处理每个子组（每组5个）
-          for (const [dirName, itemArray] of Object.entries(result)) {
-            if (!this.uploadResult[dirName]) {
-              this.uploadResult[dirName] = new Array(itemArray.length);
-            }
-            //批处理大小（batchSize）
-            const batchSize = 5;
-            for (let i = 0; i < itemArray.length; i += batchSize) {
-              const batch = itemArray.slice(i, i + batchSize);
-              await Promise.all(batch.map((item, index) => this.imagePathToBlob(item, dirName, index)));
-            }
+        for (const [dirName, itemArray] of Object.entries(result)) {
+          if (!this.uploadResult[dirName]) {
+            this.uploadResult[dirName] = new Array(itemArray.length);
           }
+          //批处理大小（batchSize）
+          const batchSize = 20;
+          for (let i = 0; i < itemArray.length; i += batchSize) {
+            const batch = itemArray.slice(i, i + batchSize);
+            await Promise.all(batch.map((item, index) => this.imagePathToBlob(item, dirName, index)));
+          }
+        }
         console.log("全部执行完毕")
       } else {
         this.$notify.error({
@@ -172,14 +173,15 @@ export default {
             file_name: rawFile.file_name,
           };
           let newObj = { ...obj, ...res.msg };
-          this.description = this.description + "图片上传成功" + newObj.path + "/n"
+          this.description = this.description + "图片上传成功" + newObj.path + "<br>"
           this.uploadResult[dirName][index] = newObj.path; // 使用索引插入网络地址
+          console.log("索引" + index)
           this.indexflag--
           console.log(this.uploadResult)
         },
         onError: async (err) => {
           console.log(err)
-          this.description = this.description + "图片上传失败" + err
+          this.description = this.description + "图片上传失败" + err + "<br>"
           this.indexflag--
 
         },
@@ -236,29 +238,40 @@ export default {
       // 设置请求头部，包含token
       const config = {
         headers: {
-          'Authorization': `Bearer ${this.token}`
+          'Authorization': ` ${this.token}`
         }
       };
       if (this.isLogin == 1) {
 
         try {
-          axios.defaults.baseURL = 'http://192.168.1.240:8063';
-          const response = await axios.post('/api/goods/preSell/photoUploadByTool', postData, config)
+          axios.defaults.baseURL = 'https://erp.yjwh.shop';
+          const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config)
+          console.log("返回值" + response);
           if (response.status === 200 || response.status === 201) {
-            this.description = this.description + dirName + "图片上传成功"
+            this.description = this.description + dirName + "图片上传成功" + "<br>"
             console.log(response.status);
-          } else if (response.status === 400) {
-            console.log("请求失败");
-            this.description = this.description + dirName + "图片覆盖失败" + response.data.message
           } else {
-            this.description = this.description + dirName + "发生未知错误，图片覆盖失败，请联系管理员"
+            this.description = this.description + dirName + "图片覆盖失败" + response.data.message + "<br>"
           }
           return response.data;
         } catch (error) {
           console.error("上传数据时发生错误:", error);
-          // 处理错误情况
-          this.description = this.description + "发生未知错误，图片覆盖失败，请联系管理员"
-
+          // 在这里处理 Axios 抛出的错误，包括 HTTP 错误（如 400）  
+          if (error.response) {
+            // 请求已经发出，服务器也响应了状态码，但不是 2xx 范围  
+            this.description = this.description + dirName + "图片覆盖失败，HTTP状态码：" + error.response.status + "<br>";
+            if (error.response.data && error.response.data.message) {
+              // 如果后端在 HTTP 错误响应中返回了错误信息，可以在这里访问它  
+              this.description += error.response.data.message + "<br>";
+            }
+          } else if (error.request) {
+            // 请求已经发出，但没有收到任何响应  
+            this.description = this.description + "请求已发出但未收到响应，请联系管理员" + "<br>";
+          } else {
+            // 在设置请求时触发了一个错误  
+            this.description = this.description + "发生未知错误，图片覆盖失败，请联系管理员" + "<br>";
+          }
+          // 可以在这里进行其他的错误处理逻辑  
         }
       } else {
         this.$notify.error({

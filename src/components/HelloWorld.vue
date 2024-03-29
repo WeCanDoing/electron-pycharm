@@ -5,7 +5,7 @@
                 <div style="height: 60px; background-color: #B3C0D1;"></div>
                 <div style="width: 380px;">
                     <file-list v-on:my-event="handleEvent" :disr="disr"></file-list>
-                    <button @click="selectDirectory">选择文件夹</button>  
+                    <button @click="selectDirectory">第一步：选择文件夹</button>  
                      <p>选择的文件夹路径: {{ disr }}</p>  
                     <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles"
                         ref="fileSelector">
@@ -70,7 +70,7 @@ export default {
         handleFiles(event) {
             const filePath = event.target.files[0].path;
             this.folderPath = path.dirname(filePath);
-            this.disr = this.folderPath;
+            this.disr = path.dirname(this.folderPath);
             console.log("文件夹路径"+this.disr)
         },
         handleEvent(data) {
@@ -81,7 +81,7 @@ export default {
         // 登录方法
         login() {
             {
-                axios.defaults.baseURL = 'https://erp-bvt.yjwh.shop';
+                axios.defaults.baseURL = 'https://erp.yjwh.shop';
                 const postData = {
                     userName: this.userName,
                     password: encrypt(this.passworld)
@@ -90,6 +90,7 @@ export default {
                     if (response.status === 200) {
                         console.log(response.status);
                         this.token = response.data.token;
+                        this.userName = response.data.user.user.username
                         this.isLogin = 1
                     } else {
                         console.log("请求失败")
