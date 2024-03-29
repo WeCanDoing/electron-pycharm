@@ -1,7 +1,7 @@
 {
   "name": "electron-pycharm-demo",
   "version": "0.1.0",
-  "author": "吉吉强",
+  "author": "jijiqiang",
   "description": "域鉴专业的抓取拍品数据工具",
   "private": true,
   "scripts": {
