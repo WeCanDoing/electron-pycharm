@@ -80,7 +80,7 @@ export default {
   },
   data() {
     return {
-      excelAddress: 'D：//示例文本.xlsx',
+      excelAddress: 'D://示例文本.xlsx',
       imageAddress: 'D://',
       catUrl: 'www.baidu.com',
       page: 0,
@@ -118,7 +118,7 @@ export default {
       t.description = ''
       this.cmdCopy(this.excelAddress, this.imageAddress, this.catUrl, this.page,this.radio, function (e) {
         // t.description = e // 这里直接赋值可能不会更新视图
-        t.description = t.description + iconv.decode(e, 'GBK')
+        t.description = t.description + iconv.decode(e, 'UTF-8')
         console.log("打印--", t.description)
 
       })
@@ -141,7 +141,7 @@ export default {
         // 监听子进程的标准输出流
         child.stdout.on('data', (data) => {
           // 使用 iconv-lite 解码 Buffer 对象
-          console.log(iconv.decode(data, 'GBK'));
+          console.log(iconv.decode(data, 'UTF-8'));
           // 使用 callbackFun 函数或其他方式处理输出结果
           callbackFun(data);
         });
@@ -149,14 +149,14 @@ export default {
         // 监听子进程的标准错误流
         child.stderr.on('data', (data) => {
           // 使用 iconv-lite 解码 Buffer 对象
-          console.error(iconv.decode(data, 'GBK'));
+          console.error(iconv.decode(data, 'UTF-8'));
           // 使用 callbackFun 函数或其他方式处理输出结果
           callbackFun(data);
         });
 
         //监听关闭流
         child.on('close', (data) => {
-          console.log(iconv.decode(data, 'GBK'));
+          console.log(iconv.decode(data, 'UTF-8'));
           this.runDisabled = false 
         });
       } catch (e) {
