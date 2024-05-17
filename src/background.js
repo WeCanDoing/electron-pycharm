@@ -4,17 +4,27 @@ import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
-
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
 async function createWindow() {
+  
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+
+    width: 500,
+    height: 500,
+    // // 窗口可移动
+    // movable: true,
+    // // 窗口可调整大小
+    // resizable: true,
+    // 关键！创建无边框窗口，没有窗口的某些部分（例如工具栏、控件等）
+    frame: false,
+    // 关键！创建一个完全透明的窗口
+    transparent: true,
+    backgroundColor: '#00000000',
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -22,9 +32,23 @@ async function createWindow() {
       // nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       nodeIntegration: true,
       // contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
-      contextIsolation: false
-    }
-  })
+      contextIsolation: false,
+      // alwaysOnTop: true, // 将窗口置于顶层
+      devTools: false
+
+
+    },
+
+  })  
+
+
+  const { screen } = require('electron');
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const x = width - 460;
+  const y = height -370 ;
+  win.setPosition(x, y);
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  win.setAlwaysOnTop(true, 'screen-saver', 1);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

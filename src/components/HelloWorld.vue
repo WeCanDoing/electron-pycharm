@@ -1,129 +1,62 @@
 <template>
-  <div class="hello">
-    <el-container style="height: 1000px; border: 1px solid #eee">
-  <el-aside width="400px" style="background-color:#fdfdfd">
-    <div data-v-469af010="" style="
-    height: 60px;
-    background-color: #B3C0D1;"></div>
-
-    
-    <div  style="width: 380px;">
-      <file-list v-on:my-event="handleEvent"></file-list>
-       <el-button type="primary" @click="selectDirectory">选择文件夹</el-button>
-        <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles" ref="fileSelector">
-    </div>
-  </el-aside>
-  
-  <el-container>
-    <el-header style="text-align: right; font-size: 20px">
-      <el-dropdown>
-        <i class="el-icon-setting" style="margin-right: 15px"></i>
-        <el-dropdown-menu slot="dropdown">
-        </el-dropdown-menu>
-      </el-dropdown>
-      <span>管理员</span>
-    </el-header>
-    
-    <el-main>
-      <py-controller :message = "msg"></py-controller>
-    </el-main>
-  </el-container>
-</el-container>
-
+  <!-- 使用示例 -->
+  <div class="live2d">
+    <!-- 可尝试一个页面上多个模型： -->
+    <!-- <live2d
+      :model="[1, 53]"
+      :direction="direction"
+      :width="width"
+      :height="height"
+      customId="vue-live2d-mian-2"
+    ></live2d> -->
+    <live2d
+      :style="style"
+      :model="['Potion-Maker/Pio', 'school-2017-costume-yellow']"
+      :direction="direction"
+      :size="size"
+    ></live2d>
   </div>
 </template>
 
 <script>
-const exec = window.require('child_process').exec
-const path = window.require('path');
-import FileList from './FileList.vue';
-import PyController from './PyController.vue';
+/*
+ * 项目中引用包时，将 import 内容替换
+ * import live2d from 'vue-live2d'
+ */
+import live2d from 'vue-live2d'
 
 export default {
-  name: 'HelloWorld',
+  name: 'App',
   components: {
-    FileList,
-    PyController
+    live2d
   },
-
-  data() {
-    const item = {
-      date: '2016-05-02',
-      name: '王小虎',
-      address: '上海市普陀区金沙江路 1518 弄'
-    };
+  data () {
     return {
-      tableData: Array(20).fill(item),
-      msg: "脚本名称"
+      direction: 'right',
+      style: 'position: fixed; top: calc(50% - 250px); left: calc(50% - 200px)',
+      width: 300,
+      height: 300,
+      size: 350,
+      tips: {
+        mouseover: [{
+          selector: '.vue-live2d',
+          texts: ['这样可以修改默认语句']
+        }]
+      }
     }
   },
-  methods: {
-    selectDirectory() {
-      this.$refs.fileSelector.click();
-    },
-    //选择文件夹
-    handleFiles(event) {
-      const files = event.target.files;
-      console.log(files);
-      for (let i = 0; i < files.length; i++) {
-        // 文件夹中的py文件移动当当前目录
-        this.cmdCopy(files[i].path,path.resolve('./resources/pyScript'),function (x) {
-        console.log(x)
-      })
-      }
-      location.reload()
-    },
-    //复制文件
-    cmdCopy (src, dest, callbackFun) {
-    try {
-        exec(`copy ${ src } ${ dest } /Y /V`, (err) => {
-          if (err) {
-            console.log(err)
-            callbackFun(false)
-            return
-          }
-          callbackFun(true)
-        })
-    } catch (e) {
-      console.log(e)
-      callbackFun(false)
-    }
-  },
-  handleEvent(data) {
-        // data 是子组件传递过来的参数，获取路径
-        console.log("地址",data)
-        this.msg = data
-      }
-  
+  created () {
+    // tips 未使用，可自行在组件绑定此参数，注意此参数只会初始化一次
+    this.tips = this.customTips
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-
-ul {
-  list-style-type: none;
+<style>
+body {
+  margin: 20px;
   padding: 0;
+  -webkit-app-region: drag;
 }
 
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-
-.el-header {
-  background-color: #B3C0D1;
-  color: #333;
-}
-
-.el-aside {
-  color: #333;
-}</style>
+</style>
