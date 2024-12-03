@@ -141,7 +141,7 @@ export default {
         // 监听子进程的标准输出流
         child.stdout.on('data', (data) => {
           // 使用 iconv-lite 解码 Buffer 对象
-          console.log(iconv.decode(data, 'UTF-8'));
+          console.log(iconv.decode(data, 'GBK'));
           // 使用 callbackFun 函数或其他方式处理输出结果
           callbackFun(data);
         });
@@ -149,14 +149,14 @@ export default {
         // 监听子进程的标准错误流
         child.stderr.on('data', (data) => {
           // 使用 iconv-lite 解码 Buffer 对象
-          console.error(iconv.decode(data, 'UTF-8'));
+          console.error(iconv.decode(data, 'GBK'));
           // 使用 callbackFun 函数或其他方式处理输出结果
           callbackFun(data);
         });
 
         //监听关闭流
         child.on('close', (data) => {
-          console.log(iconv.decode(data, 'UTF-8'));
+          console.log(iconv.decode(data, 'GBK'));
           this.runDisabled = false 
         });
       } catch (e) {
