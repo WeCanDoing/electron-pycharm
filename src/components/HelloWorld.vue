@@ -81,7 +81,7 @@ export default {
         // 登录方法
         login() {
             {
-                axios.defaults.baseURL = 'https://erp.yjwh.shop';
+                axios.defaults.baseURL = 'https://erp-bvt.yjwh.shop';
                 const postData = {
                     userName: this.userName,
                     password: encrypt(this.passworld)

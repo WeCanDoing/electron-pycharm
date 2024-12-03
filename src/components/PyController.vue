@@ -244,7 +244,7 @@ export default {
       if (this.isLogin == 1) {
 
         try {
-          axios.defaults.baseURL = 'https://erp.yjwh.shop';
+          axios.defaults.baseURL = 'https://erp-bvt.yjwh.shop';
           const response = await axios.post('/admin/api/goods/preSell/photoUploadByTool', postData, config)
           console.log("返回值" + response);
           if (response.status === 200 || response.status === 201) {
