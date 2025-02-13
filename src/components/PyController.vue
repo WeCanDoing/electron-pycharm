@@ -52,18 +52,23 @@
         <el-drawer
         title="文件使用说明"
         :visible.sync="drawer"
-        :direction="direction"
-        :before-close="handleClose">
+        >
         <span v-html="inputDesc"></span>
         <span v-html="illustrate"></span>
       </el-drawer>
       </div>
     <el-divider></el-divider>
     <div class="my-class">
-      <el-input style="color: #333;" type="textarea" :autosize="{ minRows: 20 }" placeholder="请输入内容" v-model="description"
-        clearable>
-      </el-input>
-    </div>
+        <el-input
+          type="textarea"
+          style="color: #333; height: 300px; overflow-y: auto;"
+        :autosize="{ 'min-rows': 20 }"
+          v-model="description"
+          clearable
+          disabled
+        >
+        </el-input>
+      </div>
   </div>
 </div></template>
 
@@ -72,7 +77,6 @@
 const path = window.require('path');
 var iconv = require('iconv-lite');
 const { spawn } = window.require('child_process');
-
 
 export default {
   props: {
@@ -118,52 +122,53 @@ export default {
       t.description = ''
       this.cmdCopy(this.excelAddress, this.imageAddress, this.catUrl, this.page,this.radio, function (e) {
         // t.description = e // 这里直接赋值可能不会更新视图
-        t.description = t.description + iconv.decode(e, 'UTF-8')
-        console.log("打印--", t.description)
+        t.description = t.description + iconv.decode(e, 'utf-8')
+        console.log("打印 --", t.description)
 
       })
     },
 
-    //运行python脚本
-    cmdCopy(excelAddress, imageAddress, catUrl, page,radio, callbackFun) {
-      //开关控制
+  // 修改cmdCopy方法
+  cmdCopy(excelAddress, imageAddress, catUrl, page, radio, callbackFun) {
       try {
-        console.log(path.resolve(this.message))
-        // 任何你期望执行的 cmd 命令，ipconfig 为例
-        // const cmd = 'ping www.baidu.com ';
-        const cmd = `python -u ${path.resolve(this.message)} ${catUrl} ${excelAddress} ${imageAddress} ${page} ${radio}`
-        // const cmd = 'python -u E://测试/testPy.py ';
-        console.log("cmd" + cmd)
-        //运行python命令
-
-        // 创建一个子进程，设置 shell 和 encoding 选项
-        const child = spawn(cmd, { shell: true, encoding: 'buffer' });
-        // 监听子进程的标准输出流
-        child.stdout.on('data', (data) => {
-          // 使用 iconv-lite 解码 Buffer 对象
-          console.log(iconv.decode(data, 'GBK'));
-          // 使用 callbackFun 函数或其他方式处理输出结果
-          callbackFun(data);
+        const cmd = `python -u ${path.resolve(this.message)} ${catUrl} ${excelAddress} ${imageAddress} ${page} ${radio}`;
+        console.log("cmd命令:" + cmd)
+        const child = spawn(cmd, { 
+          shell: true,
+          encoding: 'buffer',
+          stdio: ['pipe', 'pipe', 'pipe']
         });
 
-        // 监听子进程的标准错误流
-        child.stderr.on('data', (data) => {
-          // 使用 iconv-lite 解码 Buffer 对象
-          console.error(iconv.decode(data, 'GBK'));
-          // 使用 callbackFun 函数或其他方式处理输出结果
-          callbackFun(data);
+        let bufferStore = '';
+        const handleData = (buffer) => {
+          bufferStore += iconv.decode(buffer, 'utf-8');
+          const lines = bufferStore.split(/\r?\n/);
+          bufferStore = lines.pop();
+          lines.forEach(line => {
+            callbackFun(line + '\n');
+          });
+        };
+
+        child.stdout.on('data', (buffer) => {
+          handleData(buffer);
         });
 
-        //监听关闭流
-        child.on('close', (data) => {
-          console.log(iconv.decode(data, 'GBK'));
-          this.runDisabled = false 
+        child.stderr.on('data', (buffer) => {
+          handleData(buffer);
         });
+
+        child.on('close', () => {
+          if (bufferStore) {
+            callbackFun(bufferStore + '\n');
+          }
+          this.runDisabled = false;
+        });
+
       } catch (e) {
-        console.log(e)
+        console.error(e);
+        this.runDisabled = false;
       }
     },
-
     //python文件参数说明
     illustrateShow() {
       this.drawer = true

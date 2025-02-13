@@ -24,9 +24,14 @@
       };
     },
     mounted() {
-      // const dir = './src/pyScript'; // 替换为您的目录路径
-      const dir ='./resources/pyScript';
-      this.fileList = this.getFiles(dir);
+       const dir = './src/pyScript'; // 替换为您的目录路径
+      // const dir ='./resources/pyScript';
+      try {
+    this.fileList = this.getFiles(dir);
+        console.log('文件列表:', this.fileList);
+      } catch (error) {
+        console.error('读取文件列表时出错:', error);
+      }
     },
     methods: {
       getFiles(dir) {

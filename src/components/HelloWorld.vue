@@ -66,8 +66,9 @@ export default {
       const files = event.target.files;
       console.log(files);
       for (let i = 0; i < files.length; i++) {
-        // 文件夹中的py文件移动当当前目录
-        this.cmdCopy(files[i].path,path.resolve('./resources/pyScript'),function (x) {
+        // 文件夹中的py文件移动当当前目录 ./resources/pyScript
+        
+        this.cmdCopy(files[i].path,path.resolve('./src/pyScript'),function (x) {
         console.log(x)
       })
       }
