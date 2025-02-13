@@ -1,35 +1,28 @@
 <template>
   <div class="hello">
-    <el-container style="height: 1000px; border: 1px solid #eee">
-  <el-aside width="400px" style="background-color:#fdfdfd">
-    <div data-v-469af010="" style="
-    height: 60px;
-    background-color: #B3C0D1;"></div>
-
-    
-    <div  style="width: 380px;">
-      <file-list v-on:my-event="handleEvent"></file-list>
-       <el-button type="primary" @click="selectDirectory">选择文件夹</el-button>
-        <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles" ref="fileSelector">
-    </div>
-  </el-aside>
-  
-  <el-container>
-    <el-header style="text-align: right; font-size: 20px">
-      <el-dropdown>
-        <i class="el-icon-setting" style="margin-right: 15px"></i>
-        <el-dropdown-menu slot="dropdown">
-        </el-dropdown-menu>
-      </el-dropdown>
-      <span>管理员</span>
-    </el-header>
-    
-    <el-main>
-      <py-controller :message = "msg"></py-controller>
-    </el-main>
-  </el-container>
-</el-container>
-
+    <el-container style="height: 100vh; border: 1px solid #eee">
+      <el-aside width="400px" style="background-color:#fdfdfd">
+        <div class="header-placeholder"></div>
+        <div class="file-selector">
+          <file-list v-on:my-event="handleEvent"></file-list>
+          <el-button type="primary" @click="selectDirectory">选择文件夹</el-button>
+          <input type="file" id="file-selector" style="display: none" webkitdirectory @change="handleFiles" ref="fileSelector">
+        </div>
+      </el-aside>
+      <el-container>
+        <el-header class="header">
+          <el-dropdown>
+            <i class="el-icon-setting" style="margin-right: 15px"></i>
+            <el-dropdown-menu slot="dropdown">
+            </el-dropdown-menu>
+          </el-dropdown>
+          <span>管理员</span>
+        </el-header>
+        <el-main>
+          <py-controller :message="msg"></py-controller>
+        </el-main>
+      </el-container>
+    </el-container>
   </div>
 </template>
 
@@ -45,7 +38,6 @@ export default {
     FileList,
     PyController
   },
-
   data() {
     const item = {
       date: '2016-05-02',
@@ -67,17 +59,16 @@ export default {
       console.log(files);
       for (let i = 0; i < files.length; i++) {
         // 文件夹中的py文件移动当当前目录 ./resources/pyScript
-        
-        this.cmdCopy(files[i].path,path.resolve('./src/pyScript'),function (x) {
-        console.log(x)
-      })
+        this.cmdCopy(files[i].path, path.resolve('./src/pyScript'), function (x) {
+          console.log(x)
+        })
       }
       location.reload()
     },
     //复制文件
-    cmdCopy (src, dest, callbackFun) {
-    try {
-        exec(`copy ${ src } ${ dest } /Y /V`, (err) => {
+    cmdCopy(src, dest, callbackFun) {
+      try {
+        exec(`copy ${src} ${dest} /Y /V`, (err) => {
           if (err) {
             console.log(err)
             callbackFun(false)
@@ -85,46 +76,47 @@ export default {
           }
           callbackFun(true)
         })
-    } catch (e) {
-      console.log(e)
-      callbackFun(false)
-    }
-  },
-  handleEvent(data) {
-        // data 是子组件传递过来的参数，获取路径
-        console.log("地址",data)
-        this.msg = data
+      } catch (e) {
+        console.log(e)
+        callbackFun(false)
       }
-  
+    },
+    handleEvent(data) {
+      // data 是子组件传递过来的参数，获取路径
+      console.log("地址", data)
+      this.msg = data
+    }
   }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+.header-placeholder {
+  height: 60px;
+  background-color: #B3C0D1;
 }
 
-ul {
-  list-style-type: none;
-  padding: 0;
+.file-selector {
+  width: 380px;
+  padding: 20px;
 }
 
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
-
-.el-header {
+.header {
+  text-align: right;
+  font-size: 20px;
   background-color: #B3C0D1;
   color: #333;
 }
 
 .el-aside {
   color: #333;
-}</style>
+}
+
+.el-main {
+  padding: 20px;
+}
+
+.el-button {
+  margin-top: 10px;
+}
+</style>

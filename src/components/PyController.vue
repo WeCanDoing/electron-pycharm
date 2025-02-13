@@ -49,6 +49,9 @@
         <el-button @click="illustrateShow" type="primary" style="margin-left: 16px;">
           文件使用说明
         </el-button>
+        <el-button @click="forceStop" type="danger" style="margin-left: 16px;" :disabled="!runDisabled">
+          强制停止
+        </el-button>
         <el-drawer
         title="文件使用说明"
         :visible.sync="drawer"
@@ -77,6 +80,7 @@
 const path = window.require('path');
 var iconv = require('iconv-lite');
 const { spawn } = window.require('child_process');
+const fs = window.require('fs');
 
 export default {
   props: {
@@ -95,6 +99,8 @@ export default {
       inputDesc: '参数说明',
       radio: '0',
       runDisabled: false,
+      child: null, // 存储子进程对象
+      logFilePath: '' // 日志文件路径
     };
   },
   mounted() { },
@@ -120,6 +126,9 @@ export default {
       console.log(this.runDisabled)
       //清除之前的控制台缓存
       t.description = ''
+      // 生成带有时间戳的日志文件名
+      const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
+      this.logFilePath = `E://yujianTool/log_${timestamp}.txt`;
       this.cmdCopy(this.excelAddress, this.imageAddress, this.catUrl, this.page,this.radio, function (e) {
         // t.description = e // 这里直接赋值可能不会更新视图
         t.description = t.description + iconv.decode(e, 'utf-8')
@@ -128,12 +137,20 @@ export default {
       })
     },
 
-  // 修改cmdCopy方法
-  cmdCopy(excelAddress, imageAddress, catUrl, page, radio, callbackFun) {
+    forceStop() {
+      if (this.child) {
+        this.child.kill('SIGTERM');
+        this.runDisabled = false;
+        console.log("脚本已被强制停止");
+      }
+    },
+
+    // 修改cmdCopy方法
+    cmdCopy(excelAddress, imageAddress, catUrl, page, radio, callbackFun) {
       try {
         const cmd = `python -u ${path.resolve(this.message)} ${catUrl} ${excelAddress} ${imageAddress} ${page} ${radio}`;
         console.log("cmd命令:" + cmd)
-        const child = spawn(cmd, { 
+        this.child = spawn(cmd, { 
           shell: true,
           encoding: 'buffer',
           stdio: ['pipe', 'pipe', 'pipe']
@@ -141,27 +158,33 @@ export default {
 
         let bufferStore = '';
         const handleData = (buffer) => {
-          bufferStore += iconv.decode(buffer, 'utf-8');
+          const decodedBuffer = iconv.decode(buffer, 'utf-8');
+          bufferStore += decodedBuffer;
           const lines = bufferStore.split(/\r?\n/);
           bufferStore = lines.pop();
           lines.forEach(line => {
             callbackFun(line + '\n');
+            // 将输出写入日志文件
+            fs.appendFileSync(this.logFilePath, line + '\n', 'utf-8');
           });
         };
 
-        child.stdout.on('data', (buffer) => {
+        this.child.stdout.on('data', (buffer) => {
           handleData(buffer);
         });
 
-        child.stderr.on('data', (buffer) => {
+        this.child.stderr.on('data', (buffer) => {
           handleData(buffer);
         });
 
-        child.on('close', () => {
+        this.child.on('close', () => {
           if (bufferStore) {
             callbackFun(bufferStore + '\n');
+            // 将剩余的输出写入日志文件
+            fs.appendFileSync(this.logFilePath, bufferStore + '\n', 'utf-8');
           }
           this.runDisabled = false;
+          this.child = null;
         });
 
       } catch (e) {
@@ -169,6 +192,7 @@ export default {
         this.runDisabled = false;
       }
     },
+
     //python文件参数说明
     illustrateShow() {
       this.drawer = true
@@ -184,11 +208,7 @@ export default {
     }
   } 
 }
-
-
 </script>
-
-
 
 <style>
 .text {
